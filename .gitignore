@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.*
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# LocalStack
+.localstack/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

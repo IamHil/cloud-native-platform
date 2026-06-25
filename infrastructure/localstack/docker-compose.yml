@@ -1,0 +1,24 @@
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: cloud-native-localstack
+
+    ports:
+      - "4566:4566"
+
+    environment:
+      - SERVICES=s3,dynamodb,sqs,iam
+      - DEBUG=1
+
+    volumes:
+      - localstack_data:/var/lib/localstack
+
+    networks:
+      - cloud-native-network
+
+volumes:
+  localstack_data:
+
+networks:
+  cloud-native-network:
+    external: true

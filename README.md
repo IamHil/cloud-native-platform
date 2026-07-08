@@ -1,5 +1,8 @@
 # Cloud Native Platform
 
+- Start the Docker in local
+- Run this command in bash : alias awslocal='aws --profile cloud-native --endpoint-url=http://localhost:4566'
+
 ## Goal
 
 Build a production-style cloud-native application using AWS services locally with LocalStack.
@@ -78,6 +81,40 @@ SSH
 ![alt text](image-8.png)
 
 ## S3 Bucket Fundamental Completed
+
+---
+
+## DynamoDB
+
+- Create a Table 
+
+![alt text](image-9.png)
+
+![alt text](image-10.png)
+
+- Update item 
+
+![alt text](image-11.png)
+
+- Get item 
+
+![alt text](image-12.png)
+
+- Query Items 
+
+![alt text](image-13.png)
+
+- GSI 
+
+![alt text](image-14.png)
+
+- TTL( Time to Live)
+
+![alt text](image-15.png)
+
+![alt text](image-16.png)
+
+## Phase 1 Completed
 
 ---
 

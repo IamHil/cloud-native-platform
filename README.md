@@ -132,3 +132,15 @@ SSH
 
 ![alt text](image-20.png)
 
+
+- Built a FastAPI backend with a modular architecture and integrated LocalStack S3 for local AWS development. Implemented REST APIs for file upload and listing using boto3, with interactive API documentation via Swagger UI.
+
+![alt text](image-21.png)
+
+
+![alt text](image-22.png)
+
+
+![alt text](image-23.png)
+
+## Phase 2 Completed

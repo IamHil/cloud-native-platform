@@ -118,7 +118,7 @@ SSH
 
 ---
 
-## Phase 2 -  Build the Backend
+## Phase 2 and 3 -  Build the Backend
 
 
 ![alt text](image-18.png)
@@ -143,4 +143,31 @@ SSH
 
 ![alt text](image-23.png)
 
-## Phase 2 Completed
+## Phase 2 and 3 Completed
+
+# Phase 4
+
+- Apply the Register, Login functionality along with SQS system using localstack
+- This Phase consist of mini cloud-native backend using FastAPI + LocalStack, and the working upload pipeline.
+
+
+![alt text](image-24.png)
+
+
+![alt text](image-25.png)
+
+
+User Register 
+
+![alt text](image-26.png)
+
+User Login 
+
+![alt text](image-27.png)
+
+
+![alt text](image-28.png)
+## Phase 4 Completed
+
+---
+

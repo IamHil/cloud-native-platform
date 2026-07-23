@@ -6,6 +6,11 @@ from app.core.config import settings
 class S3Service:
 
     def __init__(self):
+
+        print("=" * 60)
+        print("S3 Endpoint:", settings.AWS_ENDPOINT_URL)
+        print("Bucket:", settings.S3_BUCKET)
+
         self.client = boto3.client(
             "s3",
             endpoint_url=settings.AWS_ENDPOINT_URL,
@@ -13,6 +18,8 @@ class S3Service:
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         )
+        print(self.client.list_buckets())
+        print("=" * 60)
 
     def list_files(self):
 

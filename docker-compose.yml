@@ -1,0 +1,46 @@
+version: "3.9"                                  # Docker Compose file format version.
+
+services:                                       # Defines all containers that Compose will manage.
+
+  localstack:                                   # Creates the LocalStack container.
+    image: localstack/localstack:latest         # Pulls the LocalStack image from Docker Hub.
+    container_name: cloud-native-localstack     # Gives the container a fixed name.
+
+    ports:
+      - "4566:4566"                             # Maps host port 4566 to container port 4566.
+
+    environment:
+      - SERVICES=s3,dynamodb,sqs                # Enables only S3, DynamoDB, and SQS services.
+      - DEBUG=1                                 # Turns on verbose debug logging.
+
+    volumes:
+      - ./localstack-data:/var/lib/localstack   # Persists LocalStack data on your machine.
+
+  api:                                          # Creates the FastAPI application container.
+    build:
+      context: ./backend                        # Builds the image using the Dockerfile in ./backend.
+
+    container_name: cloud-native-api            # Assigns a fixed name to the API container.
+
+    ports:
+      - "8000:8000"                             # Exposes FastAPI on localhost:8000.
+
+    env_file:
+      - ./backend/.env                          # Loads environment variables from the .env file.
+
+    depends_on:
+      - localstack                              # Starts LocalStack before starting the API.
+
+  worker:                                       # Creates the background worker container.
+    build:
+      context: ./backend                        # Uses the same Dockerfile as the API.
+
+    container_name: cloud-native-worker         # Assigns a fixed name to the worker.
+
+    command: python -m app.worker.worker        # Runs the worker instead of the FastAPI server.
+
+    env_file:
+      - ./backend/.env                          # Uses the same environment variables as the API.
+
+    depends_on:
+      - localstack                               # Starts LocalStack before starting the worker.

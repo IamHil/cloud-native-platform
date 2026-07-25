@@ -171,3 +171,32 @@ User Login
 
 ---
 
+# Phase 5
+
+
+![alt text](image-29.png)
+
+
+![alt text](image-30.png)
+
+Create a docker compose file :
+
+![alt text](image-35.png)
+
+![alt text](image-34.png)
+
+
+## Phase 5 Completed
+
+---
+
+# Phase 6
+
+Dockerize everything 
+
+![alt text](image-31.png)
+
+
+![alt text](image-32.png)
+
+![alt text](image-33.png)

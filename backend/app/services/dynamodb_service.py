@@ -58,5 +58,13 @@ class DynamoDBService:
         response = self.table.scan()
         return response.get("Items", [])
 
+    def update_status(self, file_id: str, status: str):
+        self.table.update_item(
+            Key={"file_id": file_id},
+            UpdateExpression="SET #s = :status",
+            ExpressionAttributeNames={"#s": "status"},
+            ExpressionAttributeValues={":status": status},
+        )
+
 
 dynamodb_service = DynamoDBService()

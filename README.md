@@ -200,3 +200,21 @@ Dockerize everything
 ![alt text](image-32.png)
 
 ![alt text](image-33.png)
+
+
+Kuberenetes 
+
+![alt text](image-36.png)
+
+![alt text](image-37.png)
+
+![alt text](image-38.png)
+
+
+Process to Create Kind Cluster 
+
+![alt text](image-39.png)
+
+Application of Deployment and Service 
+
+![alt text](image-40.png)

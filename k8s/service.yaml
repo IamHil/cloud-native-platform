@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: cloud-native-api
+
+spec:
+  selector:
+    app: cloud-native-api
+
+  ports:
+    - port: 8000
+      targetPort: 8000
+
+  type: NodePort

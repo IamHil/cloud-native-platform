@@ -16,15 +16,20 @@ class SQSService:
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         )
 
-        self.queue_url = self.create_queue()
+        # Queue is created by Terraform — app looks it up by name.
+        self.queue_url = self._get_queue_url()
 
-    def create_queue(self):
-
-        response = self.client.create_queue(
-            QueueName=settings.SQS_QUEUE_NAME
-        )
-
-        return response["QueueUrl"]
+    def _get_queue_url(self):
+        try:
+            response = self.client.get_queue_url(
+                QueueName=settings.SQS_QUEUE_NAME
+            )
+            return response["QueueUrl"]
+        except self.client.exceptions.QueueDoesNotExist:
+            raise RuntimeError(
+                f"SQS queue '{settings.SQS_QUEUE_NAME}' not found. "
+                "Run: cd infrastructure/terraform && terraform apply"
+            ) from None
 
     def send_message(self, message: dict):
 

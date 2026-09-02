@@ -3,6 +3,7 @@ kind: Service
 
 metadata:
   name: cloud-native-api
+  namespace: cloud-native
 
 spec:
   selector:

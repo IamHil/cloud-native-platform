@@ -1,0 +1,28 @@
+# Writes a file to the mounted volume so you can verify data survives pod restarts.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pv-test-pod
+  namespace: cloud-native
+  labels:
+    app: pv-test
+spec:
+  containers:
+    - name: pv-test
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "written at $(date)" > /data/test.txt
+          echo "Data written to persistent volume:"
+          cat /data/test.txt
+          sleep 3600
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: pvc-learning-data
+  restartPolicy: Never

@@ -17,37 +17,8 @@ class UserService:
             aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         )
 
-        self.create_table()
-
-        self.table = self.client.Table(
-            settings.USERS_TABLE
-        )
-
-    def create_table(self):
-        existing_tables = self.client.meta.client.list_tables()["TableNames"]
-
-        if settings.USERS_TABLE in existing_tables:
-            return
-        self.client.create_table(
-            TableName=settings.USERS_TABLE,
-            KeySchema=[
-                {
-                    "AttributeName": "email",
-                    "KeyType": "HASH"
-                }
-            ],
-            AttributeDefinitions=[
-                {
-                    "AttributeName": "email",
-                    "AttributeType": "S"
-                }
-            ],
-            BillingMode= "PAY_PER_REQUEST"
-        )
-
-        self.client.meta.client.get_waiter("table_exists").wait(
-            TableName=settings.USERS_TABLE
-        )
+        # Table is created by Terraform — app only reads/writes data.
+        self.table = self.client.Table(settings.USERS_TABLE)
 
     def create_user(self, user: dict):
 

@@ -15,43 +15,8 @@ class DynamoDBService:
             region_name=settings.AWS_REGION,
         )
 
-        self.create_table()
-
-        self.table = self.client.Table(
-            settings.DYNAMODB_TABLE
-        )
-
-    def create_table(self):
-
-        existing_tables = self.client.meta.client.list_tables()["TableNames"]
-
-        if settings.DYNAMODB_TABLE in existing_tables:
-            return
-
-        self.client.create_table(
-            TableName=settings.DYNAMODB_TABLE,
-            KeySchema=[
-                {
-                    "AttributeName": "file_id",
-                    "KeyType": "HASH"
-                }
-            ],
-            AttributeDefinitions=[
-                {
-                    "AttributeName": "file_id",
-                    "AttributeType": "S"
-                }
-            ],
-            BillingMode="PAY_PER_REQUEST"
-        )
-
-        self.client.meta.client.get_waiter(
-            "table_exists"
-        ).wait(
-            TableName=settings.DYNAMODB_TABLE
-        )
-
-    def save_file_metadata(self, item):
+        # Table is created by Terraform — app only reads/writes data.
+        self.table = self.client.Table(settings.DYNAMODB_TABLE)(self, item):
         self.table.put_item(Item=item)
 
     def get_all_files(self):

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: cloud-native-worker
+  namespace: cloud-native
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: cloud-native-worker
+
+  template:
+    metadata:
+      labels:
+        app: cloud-native-worker
+
+    spec:
+      containers:
+        - name: worker
+
+          image: cloud-native-api:v1
+          imagePullPolicy: Never
+
+          command:
+            - python
+            - -m
+            - app.worker.worker
+
+          envFrom:
+            - configMapRef:
+                name: cloud-native-config
+
+            - secretRef:
+                name: cloud-native-secret

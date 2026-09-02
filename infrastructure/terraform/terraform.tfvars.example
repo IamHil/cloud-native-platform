@@ -1,0 +1,31 @@
+# =============================================================================
+# terraform.tfvars.example — Example overrides (optional)
+# =============================================================================
+#
+# ⚠️  LOCALSTACK ONLY — Do not put production AWS values here.
+#
+# Default LocalStack settings are in localstack.auto.tfvars (auto-loaded).
+# Only copy this file if you need to override something, e.g.:
+#
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# Allowed endpoint alternatives:
+#   http://localhost:4566          ← default (LocalStack via Docker Compose)
+#   http://host.docker.internal:4566  ← if LocalStack port is exposed to host from Docker
+# =============================================================================
+
+aws_region = "us-east-1"
+
+# Must stay LocalStack — safety checks will block amazonaws.com
+aws_endpoint_url      = "http://localhost:4566"
+aws_access_key_id     = "test"
+aws_secret_access_key = "test"
+
+environment = "local"
+
+project_name = "cloud-native-platform"
+
+s3_bucket_name       = "cloud-native-uploads"
+dynamodb_files_table = "files"
+dynamodb_users_table = "users"
+sqs_queue_name       = "file-processing-queue"

@@ -1,0 +1,18 @@
+# Learning exercise: static PersistentVolume (not used by the API/worker).
+# PV represents cluster storage. PVC requests it. A Pod mounts the PVC.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-learning-data
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /data/pv-learning
+    type: DirectoryOrCreate

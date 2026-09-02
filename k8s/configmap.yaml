@@ -1,0 +1,15 @@
+apiVersion: v1
+
+kind: ConfigMap
+
+metadata:
+  name: cloud-native-config
+  namespace: cloud-native
+
+data:
+  AWS_REGION: "us-east-1"
+  AWS_ENDPOINT_URL: "http://localstack:4566"
+  S3_BUCKET: "cloud-native-uploads"
+  DYNAMODB_TABLE: "files"
+  SQS_QUEUE_NAME: "file-processing-queue"
+  USERS_TABLE: "users"

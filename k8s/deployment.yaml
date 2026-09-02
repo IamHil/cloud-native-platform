@@ -1,12 +1,18 @@
 apiVersion: apps/v1
-
 kind: Deployment
 
 metadata:
   name: cloud-native-api
+  namespace: cloud-native
 
 spec:
   replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
 
   selector:
     matchLabels:
@@ -22,8 +28,38 @@ spec:
         - name: api
 
           image: cloud-native-api:v1
-
           imagePullPolicy: Never
 
           ports:
             - containerPort: 8000
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+
+          envFrom:
+            - configMapRef:
+                name: cloud-native-config
+
+            - secretRef:
+                name: cloud-native-secret
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+
+            initialDelaySeconds: 30
+            periodSeconds: 10

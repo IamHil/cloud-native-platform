@@ -1,0 +1,37 @@
+# Learning NetworkPolicy — allow API traffic to LocalStack and monitoring scrape.
+# Apply after core services are running: kubectl apply -f k8s/networkpolicy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloud-native-api
+  namespace: cloud-native
+spec:
+  podSelector:
+    matchLabels:
+      app: cloud-native-api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # LocalStack + in-cluster services
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 4566
+        - protocol: TCP
+          port: 8000

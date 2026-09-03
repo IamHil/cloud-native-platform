@@ -18,11 +18,22 @@ spec:
         app: cloud-native-worker
 
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
       containers:
         - name: worker
 
           image: cloud-native-api:v1
           imagePullPolicy: Never
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
 
           command:
             - python

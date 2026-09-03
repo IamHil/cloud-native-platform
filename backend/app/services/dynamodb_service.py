@@ -16,7 +16,9 @@ class DynamoDBService:
         )
 
         # Table is created by Terraform — app only reads/writes data.
-        self.table = self.client.Table(settings.DYNAMODB_TABLE)(self, item):
+        self.table = self.client.Table(settings.DYNAMODB_TABLE)
+
+    def save_file_metadata(self, item):
         self.table.put_item(Item=item)
 
     def get_all_files(self):

@@ -12,8 +12,9 @@ Repository: [github.com/IamHil/cloud-native-platform](https://github.com/IamHil/
 - Docker & Docker Compose
 - Kubernetes
 - Infrastructure as Code (Terraform)
-- Monitoring & Logging *(Phase 8)*
-- Security & Production AWS *(Phases 9–10)*
+- Monitoring & Logging *(Phase 8)* ✅
+- Security *(Phase 9)* ✅
+- Production AWS *(Phase 10)*
 
 ---
 
@@ -29,8 +30,8 @@ Repository: [github.com/IamHil/cloud-native-platform](https://github.com/IamHil/
 | 5 | Docker + Compose | ✅ |
 | 6 | Kubernetes | ✅ |
 | 7 | Infrastructure as Code (Terraform) | ✅ |
-| 8 | Monitoring & Logging | ⏳ |
-| 9 | Security | ⏳ |
+| 8 | Monitoring & Logging | ✅ |
+| 9 | Security | ✅ |
 | 10 | Production AWS | ⏳ |
 | 11 | Scaling & Cloud Architecture | ⏳ |
 | 12 | Final Polish | ⏳ |
@@ -81,6 +82,7 @@ DevOps-Cloud-Native-Platform/
 │   └── Dockerfile
 ├── infrastructure/
 │   └── terraform/              # IaC — LocalStack only (Phase 7)
+├── monitoring/                 # Prometheus, Grafana, Loki (Phase 8)
 ├── k8s/                        # Kubernetes manifests (Phase 6)
 ├── docker-compose.yml          # LocalStack + API + worker
 └── README.md
@@ -1018,7 +1020,304 @@ This removes the S3 bucket, DynamoDB tables, and SQS queue. Run `terraform apply
 
 ## Phase 7 — Completed
 
-Next up: **Phase 8 — Monitoring & Logging (Prometheus, Grafana, Loki)**
+---
+
+# Phase 8 — Monitoring & Logging
+
+**Goal:** Observe the application with metrics, dashboards, logs, and basic alerts.
+
+## Roadmap Progress
+
+| # | Topic | Status |
+|---|-------|--------|
+| 1 | Prometheus | ✅ |
+| 2 | Metrics (`/metrics`) | ✅ |
+| 3 | Grafana | ✅ |
+| 4 | Dashboards | ✅ |
+| 5 | Loki | ✅ |
+| 6 | Log aggregation (Promtail) | ✅ |
+| 7 | Health endpoints | ✅ |
+| 8 | Alerting basics | ✅ |
+
+**Phase 8 — Completed**
+
+---
+
+## Architecture
+
+```text
+FastAPI /metrics  ──→  Prometheus  ──→  Grafana (dashboards + alerts)
+       │
+       └── pod logs ──→  Promtail  ──→  Loki  ──→  Grafana (Explore)
+```
+
+All monitoring components run in the **`cloud-native`** namespace alongside the app.
+
+---
+
+## What Was Added
+
+### Application
+
+| File | Purpose |
+|------|---------|
+| `backend/app/api/metrics.py` | Exposes `GET /metrics` (Prometheus format) |
+| `backend/app/api/health.py` | Enhanced `/health` with service name + version |
+| `backend/requirements.txt` | Added `prometheus-client` for `/metrics` |
+
+### Kubernetes manifests
+
+```text
+monitoring/
+├── prometheus/
+│   ├── configmap.yaml      # scrape config + alert rules
+│   ├── deployment.yaml
+│   └── service.yaml
+├── grafana/
+│   ├── datasources-configmap.yaml   # auto-configures Prometheus + Loki
+│   ├── deployment.yaml
+│   └── service.yaml
+├── loki/
+│   ├── configmap.yaml
+│   ├── deployment.yaml
+│   └── service.yaml
+└── promtail/
+    ├── rbac.yaml           # read pod logs from the cluster
+    ├── configmap.yaml
+    └── daemonset.yaml      # ships logs to Loki
+```
+
+---
+
+## Deploy Monitoring Stack
+
+**Prerequisites:** kind cluster running, API deployed with rebuilt image (includes `/metrics`).
+
+```bash
+# 1. Rebuild API with metrics support
+docker build -t cloud-native-api:v1 ./backend
+kind load docker-image cloud-native-api:v1 --name cloud-native
+kubectl rollout restart deployment/cloud-native-api -n cloud-native
+
+# 2. Deploy monitoring
+kubectl apply -f monitoring/prometheus/
+kubectl apply -f monitoring/loki/
+kubectl apply -f monitoring/grafana/
+kubectl apply -f monitoring/promtail/
+
+# 3. Verify pods
+kubectl get pods -n cloud-native
+```
+
+---
+
+## Access UIs
+
+```bash
+# Prometheus
+kubectl port-forward -n cloud-native svc/prometheus 9090:9090
+# → http://localhost:9090
+
+# Grafana (admin / admin)
+kubectl port-forward -n cloud-native svc/grafana 3000:3000
+# → http://localhost:3000
+```
+
+---
+
+## Verify Metrics
+
+```bash
+# From your machine (Docker Compose)
+curl http://localhost:8000/metrics
+
+# In Prometheus UI → Status → Targets
+# cloud-native-api should be UP
+
+# In Grafana → Explore → Prometheus
+rate(http_requests_total[1m])
+```
+
+Prometheus **Status → Targets** showing `cloud-native-api` **UP** (scraping `/metrics`):
+
+![Prometheus targets — cloud-native-api UP](image-44.png)
+
+This means Prometheus successfully reaches `http://cloud-native-api:8000/metrics` inside the cluster.
+
+---
+
+## Verify Logs
+
+In Grafana → **Explore** → select **Loki**:
+
+```logql
+{namespace="cloud-native", app="cloud-native-api"}
+```
+
+Or filter worker logs:
+
+```logql
+{namespace="cloud-native", app="cloud-native-worker"}
+```
+
+---
+
+## Alerting
+
+Prometheus includes a starter rule (`ApiHighErrorRate`) in `monitoring/prometheus/configmap.yaml` — fires when the API returns 5xx errors.
+
+View in Prometheus UI → **Alerts**, or configure Grafana alert notifications later in Phase 9/10.
+
+---
+
+## Docker Compose (local testing)
+
+Metrics work with Docker Compose too — no Prometheus/Grafana in compose yet, but you can test:
+
+```bash
+docker compose build api
+docker compose up api
+curl http://localhost:8000/metrics
+curl http://localhost:8000/health
+```
+
+---
+
+
+
+## Phase 8 — Completed
+
+---
+
+# Phase 9 — Security
+
+**Goal:** Make the platform production-ready with security best practices (local learning — still LocalStack only).
+
+## Roadmap Progress
+
+| # | Topic | Status |
+|---|-------|--------|
+| 1 | IAM best practices | ✅ |
+| 2 | Secrets management | ✅ |
+| 3 | Docker security | ✅ |
+| 4 | Kubernetes security | ✅ |
+| 5 | Image scanning | ✅ |
+| 6 | Dependency scanning | ✅ |
+| 7 | HTTPS | ✅ |
+| 8 | JWT security | ✅ |
+| 9 | Rate limiting | ✅ |
+| 10 | CORS | ✅ |
+| 11 | Security headers | ✅ |
+
+---
+
+## What We Implemented
+
+### Application security (`backend/`)
+
+| Feature | Where | What it does |
+|---------|-------|--------------|
+| CORS | `main.py` | Restrict which origins can call the API from a browser |
+| Security headers | `app/middleware/security_headers.py` | Adds `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, etc. |
+| Rate limiting | `main.py` + `slowapi` | Limits requests per IP (default 60/minute) |
+| JWT hardening | `jwt_handler.py` + `config.py` | Requires `JWT_SECRET_KEY`, rejects weak defaults |
+
+### Docker security
+
+| Change | Why |
+|--------|-----|
+| Non-root user in `Dockerfile` | Container does not run as root |
+| No secrets in image | Credentials come from env / K8s Secrets |
+
+### Kubernetes security
+
+| Change | Why |
+|--------|-----|
+| `securityContext` on API/worker | `runAsNonRoot`, drop capabilities |
+| Secrets stay in `k8s/secret.yaml` | Not baked into ConfigMaps or images |
+| NetworkPolicy (optional) | Restrict pod-to-pod traffic |
+
+### Scanning (how to run)
+
+```bash
+# Dependency scan (Python)
+pip install pip-audit
+pip-audit -r backend/requirements.txt
+
+# Image scan (requires Trivy installed)
+trivy image cloud-native-api:v1
+```
+
+### HTTPS / TLS
+
+For local learning we keep HTTP. Production HTTPS belongs in Phase 10 (ACM + Load Balancer / Ingress TLS). Documented here so you know the gap.
+
+### IAM best practices (LocalStack / AWS)
+
+- Use least privilege — never use root/admin keys in apps
+- LocalStack uses `test`/`test` only in local Terraform
+- Production IAM roles come in Phase 10 — separate from this folder
+
+---
+
+## Apply Security Updates
+
+```bash
+# 1. Update K8s secret (stronger JWT)
+kubectl apply -f k8s/secret.yaml
+
+# 2. Rebuild API image (non-root + security middleware)
+docker build -t cloud-native-api:v1 ./backend
+kind load docker-image cloud-native-api:v1 --name cloud-native
+
+# 3. Apply hardened deployments
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/worker.yaml
+kubectl apply -f k8s/networkpolicy.yaml
+
+# 4. Rollout
+kubectl rollout restart deployment/cloud-native-api -n cloud-native
+kubectl rollout status deployment/cloud-native-api -n cloud-native
+```
+
+---
+
+## Verify Security Features
+
+```bash
+# Security headers
+curl -I http://localhost:8000/health
+# Expect: X-Content-Type-Options: nosniff, X-Frame-Options: DENY
+
+# Rate limiting (after many requests you may get HTTP 429)
+# curl http://localhost:8000/
+
+# JWT: app refuses to start if JWT_SECRET_KEY is weak/missing
+```
+
+Docker Compose path (update `.env` from `.env.example` first):
+
+```bash
+docker compose build api
+docker compose up api
+curl -I http://localhost:8000/health
+```
+
+---
+
+## Secrets Management Rules
+
+| Do ✅ | Don't ❌ |
+|-------|---------|
+| Keep secrets in `.env` (gitignored) or `k8s/secret.yaml` | Commit real AWS keys or JWT secrets |
+| Use Terraform LocalStack `test`/`test` only locally | Reuse production credentials in this repo |
+| Rotate JWT secret when moving to Phase 10 | Put secrets in ConfigMaps or Docker images |
+
+---
+
+## Phase 9 — Completed
+
+Next up: **Phase 10 — Production AWS** (careful with cost)
 
 ---
 
@@ -1030,12 +1329,13 @@ Next up: **Phase 8 — Monitoring & Logging (Prometheus, Grafana, Loki)**
 | `infrastructure/terraform/.terraform.lock.hcl` | `infrastructure/terraform/*.tfstate*` |
 | `infrastructure/terraform/localstack.auto.tfvars` | `infrastructure/terraform/terraform.tfvars` |
 | `k8s/` manifests | `.env` files |
-| `backend/` source code | `localstack-data/` |
-| `README.md`, `docker-compose.yml` | `__pycache__/`, `*.pyc` |
+| `monitoring/` | `localstack-data/` |
+| `backend/` source (not `.env`) | `__pycache__/`, `*.pyc` |
+| `README.md`, `image-44.png`, `docker-compose.yml` | |
 
 ```bash
-git add README.md infrastructure/terraform/ k8s/ backend/app/services/ docker-compose.yml
+git add README.md image-44.png monitoring/ backend/ k8s/
 git status
-git commit -m "Complete Phase 6 (Kubernetes) and Phase 7 (Terraform LocalStack IaC)"
+git commit -m "Complete Phase 8 (Monitoring) and Phase 9 (Security)"
 git push
 ```

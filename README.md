@@ -1587,20 +1587,3 @@ Phase 0–12  ✅
 
 Keep building skills on LocalStack + kind. Use `docs/` when presenting this project.
 
----
-
-## Git — What to Commit
-
-| Commit ✅ | Ignore ❌ |
-|-----------|-----------|
-| `docs/` | `**/*.tfstate*` |
-| `infrastructure/terraform-aws-prod/` | `**/terraform.tfvars` |
-| `.github/workflows/ci.yml` | `.env`, `localstack-data/` |
-| `README.md` | |
-
-```bash
-git add README.md docs/ infrastructure/terraform-aws-prod/ .github/
-git status
-git commit -m "feat: complete Phases 10–12 (AWS TF reference, architecture, portfolio polish)"
-git push
-```

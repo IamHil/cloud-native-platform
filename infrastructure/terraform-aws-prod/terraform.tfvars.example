@@ -1,0 +1,20 @@
+# =============================================================================
+# terraform.tfvars.example
+# =============================================================================
+# CODE ONLY — do NOT run terraform apply against real AWS from this folder.
+# These files exist so you can READ how production Terraform is structured.
+# =============================================================================
+
+aws_region   = "us-east-1"
+environment  = "dev"
+project_name = "cloud-native-platform"
+
+owner              = "your-name@example.com"
+budget_alert_email = "your-name@example.com"
+monthly_budget_usd = 5
+
+# MUST stay false — apply is blocked in this learning repo
+confirm_real_aws = false
+
+enable_ec2_demo = false
+enable_alb      = false

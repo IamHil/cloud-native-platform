@@ -4,6 +4,17 @@ Build a production-style cloud-native application using AWS services locally wit
 
 Repository: [github.com/IamHil/cloud-native-platform](https://github.com/IamHil/cloud-native-platform) (branch: `main`)
 
+**Portfolio one-liner:** FastAPI + LocalStack (S3/DynamoDB/SQS) + Docker + Kubernetes + Terraform + Prometheus/Grafana/Loki — with security hardening and production AWS Terraform as **code-only reference** (apply blocked).
+
+| Quick links | |
+|-------------|---|
+| Docs index | [docs/README.md](docs/README.md) |
+| Architecture | [docs/architecture.md](docs/architecture.md) |
+| Diagram | [docs/architecture-diagram.md](docs/architecture-diagram.md) |
+| API | [docs/api.md](docs/api.md) · Swagger `/docs` |
+| Demo script | [docs/demo.md](docs/demo.md) |
+| CI/CD | [docs/ci-cd.md](docs/ci-cd.md) |
+
 ---
 
 ## Learning Goals
@@ -14,7 +25,9 @@ Repository: [github.com/IamHil/cloud-native-platform](https://github.com/IamHil/
 - Infrastructure as Code (Terraform)
 - Monitoring & Logging *(Phase 8)* ✅
 - Security *(Phase 9)* ✅
-- Production AWS *(Phase 10)*
+- Production AWS *(Phase 10)* ✅ code-only — **no real AWS apply**
+- Scaling & Architecture *(Phase 11)* ✅
+- Final Polish *(Phase 12)* ✅
 
 ---
 
@@ -32,9 +45,9 @@ Repository: [github.com/IamHil/cloud-native-platform](https://github.com/IamHil/
 | 7 | Infrastructure as Code (Terraform) | ✅ |
 | 8 | Monitoring & Logging | ✅ |
 | 9 | Security | ✅ |
-| 10 | Production AWS | ⏳ |
-| 11 | Scaling & Cloud Architecture | ⏳ |
-| 12 | Final Polish | ⏳ |
+| 10 | Production AWS | ✅ code-only |
+| 11 | Scaling & Cloud Architecture | ✅ |
+| 12 | Final Polish | ✅ |
 
 ---
 
@@ -76,12 +89,21 @@ Repository: [github.com/IamHil/cloud-native-platform](https://github.com/IamHil/
 DevOps-Cloud-Native-Platform/
 ├── backend/                    # FastAPI app (API + worker)
 │   ├── app/
-│   │   ├── api/                # Routes (auth, files, health)
+│   │   ├── api/                # Routes (auth, files, health, metrics)
 │   │   ├── services/           # S3, DynamoDB, SQS clients
 │   │   └── worker/             # SQS message processor
 │   └── Dockerfile
+├── docs/
+│   ├── README.md               # Docs index
+│   ├── architecture.md         # Phase 11 scaling & architecture
+│   ├── architecture-diagram.md # Portfolio diagram
+│   ├── api.md                  # API overview
+│   ├── demo.md                 # Demo checklist
+│   └── ci-cd.md                # CI/CD notes
+├── .github/workflows/ci.yml    # GitHub Actions CI
 ├── infrastructure/
-│   └── terraform/              # IaC — LocalStack only (Phase 7)
+│   ├── terraform/              # IaC — LocalStack only (Phase 7)
+│   └── terraform-aws-prod/     # IaC — real AWS shape (Phase 10) — DO NOT APPLY
 ├── monitoring/                 # Prometheus, Grafana, Loki (Phase 8)
 ├── k8s/                        # Kubernetes manifests (Phase 6)
 ├── docker-compose.yml          # LocalStack + API + worker
@@ -1317,7 +1339,253 @@ curl -I http://localhost:8000/health
 
 ## Phase 9 — Completed
 
-Next up: **Phase 10 — Production AWS** (careful with cost)
+---
+
+# Phase 10 — Production AWS
+
+**Goal:** Learn how the **same infrastructure** would be defined for real AWS — **as code only**.
+
+> ## DO NOT CREATE REAL AWS RESOURCES FROM THIS REPO
+>
+> - We write Terraform so you understand production structure.
+> - We do **NOT** run `terraform apply` against a real AWS account.
+> - `confirm_real_aws` is hard-blocked at `false` — apply will fail on purpose.
+> - Keep using **LocalStack** (`infrastructure/terraform/`) for anything that actually runs.
+
+## Roadmap Progress
+
+| # | Topic | Status |
+|---|-------|--------|
+| 1 | Separate prod Terraform project | ✅ |
+| 2 | Apply disabled (code-only safety) | ✅ |
+| 3 | S3 (encrypted, private) | ✅ code |
+| 4 | DynamoDB (on-demand) | ✅ code |
+| 5 | SQS | ✅ code |
+| 6 | IAM least-privilege role | ✅ code |
+| 7 | CloudWatch Logs | ✅ code |
+| 8 | Optional EC2 demo (off) | ✅ code |
+| 9 | ALB / ACM / Route53 | 📄 documented only |
+| 10 | ECS | 📄 optional later |
+
+---
+
+## LocalStack vs Real AWS (code)
+
+| Folder | Target | What we do |
+|--------|--------|------------|
+| `infrastructure/terraform/` | **LocalStack** | `plan` / `apply` OK (free local) |
+| `infrastructure/terraform-aws-prod/` | **Real AWS shape** | **Read the code only** — never apply here |
+
+---
+
+## What the code DEFINES (not created)
+
+These `.tf` files show what you *would* create on AWS someday — they are **not** applied in this project:
+
+- S3 bucket (private + encryption)
+- DynamoDB tables `files` + `users` (PAY_PER_REQUEST)
+- SQS queue
+- IAM role + instance profile (least privilege)
+- CloudWatch log group
+- AWS Budget + SNS email alert template
+- Optional EC2 / ALB — left off / documented
+
+---
+
+## Allowed learning commands (this folder)
+
+```bash
+cd infrastructure/terraform-aws-prod
+
+# Optional: install providers only (no AWS API creates)
+terraform init
+
+# Reading the files is enough for Phase 10.
+# Do NOT run: terraform apply
+# Do NOT set confirm_real_aws=true (blocked anyway)
+```
+
+---
+
+## Cost Safety Checklist
+
+1. Never use root AWS credentials with this folder
+2. Never run `terraform apply` from `terraform-aws-prod/`
+3. Keep LocalStack for all hands-on demos
+4. Treat these files as a **portfolio / learning reference**
+
+---
+
+## Project Structure
+
+```text
+infrastructure/terraform-aws-prod/
+├── versions.tf
+├── provider.tf              # Real AWS provider shape (not applied)
+├── variables.tf             # apply hard-blocked
+├── locals.tf
+├── s3.tf
+├── dynamodb.tf
+├── sqs.tf
+├── iam.tf
+├── cloudwatch.tf
+├── budget.tf
+├── ec2_optional.tf          # OFF
+├── alb_placeholder.tf       # docs only
+├── outputs.tf
+└── terraform.tfvars.example
+```
+
+---
+
+## ALB / ACM / HTTPS / Route53 / ECS
+
+Documented only — not enabled. They cost money even with little traffic.
+
+---
+
+## Phase 10 — Completed (code-only)
+
+---
+
+# Phase 11 — Scaling & Cloud Architecture
+
+**Goal:** Understand production architecture patterns — **concepts only, no AWS spend, no `terraform apply`.**
+
+Full write-up: [`docs/architecture.md`](docs/architecture.md)
+
+## Roadmap Progress
+
+| # | Topic | Status |
+|---|-------|--------|
+| 1 | High availability | ✅ |
+| 2 | Auto scaling | ✅ |
+| 3 | Multi-AZ | ✅ |
+| 4 | Caching | ✅ |
+| 5 | CDN | ✅ |
+| 6 | Disaster recovery | ✅ |
+| 7 | Cost optimization | ✅ |
+| 8 | Event-driven architecture | ✅ |
+
+**Phase 11 — Completed**
+
+---
+
+## How Our Project Maps to Production
+
+| Concept | What we already have | Production upgrade |
+|---------|----------------------|--------------------|
+| HA | 2 API replicas + health probes | Multi-AZ + load balancer |
+| Auto scaling | Kubernetes HPA | HPA + node/ECS autoscaling |
+| Multi-AZ | Simulated locally | Real AZs in AWS region |
+| Caching | Not added (keep simple) | ElastiCache/Redis later |
+| CDN | Not added | CloudFront → S3 |
+| DR | LocalStack volume / TF recreate | Backups, PITR, multi-region plan |
+| Cost control | LocalStack + apply-blocked prod TF | Budgets, right-sizing |
+| Events | API → SQS → Worker | Same + DLQ / EventBridge |
+
+---
+
+## Mental Model
+
+```text
+LOCAL (what we run)              PRODUCTION (what we study)
+─────────────────────            ──────────────────────────
+kind / Docker Compose     ≈      EKS / ECS / EC2+ASG
+LocalStack                ≈      S3 + DynamoDB + SQS
+HPA                       ≈      Auto Scaling
+Prometheus/Grafana/Loki   ≈      CloudWatch + managed observability
+terraform/ (LocalStack)   ≈      terraform-aws-prod/ (reference only)
+```
+
+---
+
+## Event-Driven Flow (you already built this)
+
+```text
+Client → API → S3 (file) + DynamoDB (metadata)
+              → SQS message
+                    → Worker → update status in DynamoDB
+```
+
+That is the core of scalable cloud backends: **fast API + async work**.
+
+---
+
+## What We Intentionally Did NOT Deploy
+
+- Real multi-region failover
+- ElastiCache / CloudFront
+- Always-on ALB
+
+Those cost money. We document them in `docs/architecture.md` instead.
+
+---
+
+## Phase 11 — Completed
+
+---
+
+# Phase 12 — Final Polish
+
+**Goal:** Package the project as portfolio-ready documentation.
+
+## Roadmap Progress
+
+| # | Topic | Status |
+|---|-------|--------|
+| 1 | Architecture diagram | ✅ `docs/architecture-diagram.md` |
+| 2 | README polish | ✅ portfolio one-liner + doc links |
+| 3 | Screenshots | ✅ (Phases 0–8 images, Prometheus `image-44.png`) |
+| 4 | API documentation | ✅ `docs/api.md` + Swagger |
+| 5 | Terraform documentation | ✅ Phases 7 & 10 in README |
+| 6 | CI/CD documentation | ✅ `docs/ci-cd.md` + `.github/workflows/ci.yml` |
+| 7 | Kubernetes documentation | ✅ Phase 6 in README + `k8s/` |
+| 8 | Demo checklist | ✅ `docs/demo.md` |
+| 9 | Portfolio integration | ✅ top-of-README + docs index |
+
+**Phase 12 — Completed**
+
+---
+
+## Portfolio Summary
+
+This repository demonstrates an end-to-end DevOps / cloud-native learning path:
+
+1. **App** — FastAPI auth, uploads, async worker  
+2. **Cloud services (local)** — S3, DynamoDB, SQS via LocalStack  
+3. **Containers** — Docker Compose  
+4. **Orchestration** — Kubernetes (Deployments, Services, Ingress, HPA, PVs)  
+5. **IaC** — Terraform for LocalStack; real-AWS TF kept as **read-only reference**  
+6. **Observability** — Prometheus, Grafana, Loki, Promtail  
+7. **Security** — CORS, headers, rate limits, JWT hardening, non-root containers  
+8. **Architecture** — HA, scaling, event-driven design documented  
+
+**Explicit non-goal:** creating billable resources on real AWS from this repo.
+
+---
+
+## Demo in 5 commands
+
+```bash
+docker compose up -d localstack
+cd infrastructure/terraform && terraform apply && cd ../..
+docker compose up api worker
+curl http://localhost:8000/health
+# Open http://localhost:8000/docs
+```
+
+Full walkthrough: [docs/demo.md](docs/demo.md)
+
+---
+
+## All Phases Complete
+
+```text
+Phase 0–12  ✅
+```
+
+Keep building skills on LocalStack + kind. Use `docs/` when presenting this project.
 
 ---
 
@@ -1325,17 +1593,14 @@ Next up: **Phase 10 — Production AWS** (careful with cost)
 
 | Commit ✅ | Ignore ❌ |
 |-----------|-----------|
-| `infrastructure/terraform/*.tf` | `infrastructure/terraform/.terraform/` |
-| `infrastructure/terraform/.terraform.lock.hcl` | `infrastructure/terraform/*.tfstate*` |
-| `infrastructure/terraform/localstack.auto.tfvars` | `infrastructure/terraform/terraform.tfvars` |
-| `k8s/` manifests | `.env` files |
-| `monitoring/` | `localstack-data/` |
-| `backend/` source (not `.env`) | `__pycache__/`, `*.pyc` |
-| `README.md`, `image-44.png`, `docker-compose.yml` | |
+| `docs/` | `**/*.tfstate*` |
+| `infrastructure/terraform-aws-prod/` | `**/terraform.tfvars` |
+| `.github/workflows/ci.yml` | `.env`, `localstack-data/` |
+| `README.md` | |
 
 ```bash
-git add README.md image-44.png monitoring/ backend/ k8s/
+git add README.md docs/ infrastructure/terraform-aws-prod/ .github/
 git status
-git commit -m "Complete Phase 8 (Monitoring) and Phase 9 (Security)"
+git commit -m "feat: complete Phases 10–12 (AWS TF reference, architecture, portfolio polish)"
 git push
 ```

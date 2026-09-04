@@ -1,0 +1,10 @@
+# STOP — DO NOT APPLY TO REAL AWS
+#
+# This folder is a LEARNING / PORTFOLIO reference only.
+# Running `terraform apply` here is blocked by variable validation.
+#
+# Hands-on infrastructure stays in:
+#   ../terraform/   → LocalStack (free, local)
+#
+# If you ever need real AWS later, that should be a conscious personal
+# decision outside this learning workflow — not part of our default path.
